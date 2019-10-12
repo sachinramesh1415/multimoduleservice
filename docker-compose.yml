@@ -1,0 +1,83 @@
+ version: '3'
+ services:
+   mysql-docker:
+     image: mysql:5.7
+     container_name: mysql-docker
+     restart: always
+     network_mode: host
+     hostname: localhost
+     ports:
+       - '3306:3306'
+     environment:
+       MYSQL_ROOT_PASSWORD: root
+       MYSQL_USER: root
+       MYSQL_CI_URL: jdbc:mysql://localhost:3306/movieDb?useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+
+
+   mongodb:
+     image: mongo:3.4-xenial
+     network_mode: host
+     hostname: localhost
+     restart: always
+     container_name: mongodb
+     ports:
+       - '27017:27017'
+
+   eureka:
+     build: eureka-server/
+     network_mode: host
+     hostname: localhost
+     restart: always
+     container_name: eureka
+     ports:
+       - '8761:8761'
+
+   config-server:
+     build: config-server/
+     network_mode: host
+     hostname: localhost
+     restart: always
+     container_name: config-server
+     ports:
+       - '8888:8888'
+
+   movie-zuul:
+     build: movie-zuul/
+     network_mode: host
+     hostname: localhost
+     restart: always
+     container_name: movie-zuul
+     depends_on:
+       - movie-service
+       - user-service
+       - eureka
+     ports:
+       - '8080:8080'
+
+   movie-service:
+     build: movie-service/
+     network_mode: host
+     hostname: localhost
+     restart: always
+     container_name: movie-service
+     ports:
+       - '8090:8090'
+     depends_on:
+       - mongodb
+       - config-server
+       - eureka
+
+   user-service:
+     build: user-service/
+     network_mode: host
+     hostname: localhost
+     restart: always
+     container_name: user-service
+     ports:
+       - '8070:8070'
+     depends_on:
+       - mysql-docker
+       - config-server
+       - eureka
+
+
